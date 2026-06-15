@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow – Premium Todo Manager</title>
+    <meta name="description" content="A beautiful and intuitive task management app to boost your productivity.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Animated Background -->
+<div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <span class="logo-icon">✦</span>
+                <span class="logo-text">TaskFlow</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card" id="stat-total">
+                <div class="stat-number" id="count-total">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-card active" id="stat-active">
+                <div class="stat-number" id="count-active">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card done" id="stat-done">
+                <div class="stat-number" id="count-done">0</div>
+                <div class="stat-label">Done</div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span>Progress</span>
+                <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Views -->
+        <nav class="sidebar-nav">
+            <div class="nav-label">View</div>
+            <button class="nav-btn active" id="view-tasks-btn">
+                <span class="nav-icon">◈</span> Tasks
+            </button>
+            <button class="nav-btn" id="view-analytics-btn">
+                <span class="nav-icon">◉</span> Analytics
+            </button>
+        </nav>
+
+        <!-- Filters -->
+        <nav class="sidebar-nav" id="filter-nav">
+            <div class="nav-label">Filter</div>
+            <button class="nav-btn active" data-filter="all" id="filter-all">
+                <span class="nav-icon">◈</span> All Tasks
+            </button>
+            <button class="nav-btn" data-filter="active" id="filter-active">
+                <span class="nav-icon">◉</span> Active
+            </button>
+            <button class="nav-btn" data-filter="completed" id="filter-completed">
+                <span class="nav-icon">◎</span> Completed
+            </button>
+        </nav>
+
+        <!-- Categories -->
+        <div class="sidebar-nav">
+            <div class="nav-label">Categories</div>
+            <div id="category-list">
+                <button class="nav-btn active" data-category="all">
+                    <span class="nav-icon">⬡</span> All Categories
+                </button>
+            </div>
+        </div>
+
+        <!-- Clear Completed -->
+        <div class="sidebar-footer">
+            <button class="clear-btn" id="clear-completed-btn">
+                🗑 Clear Completed
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="tasks-view">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <h1 id="page-title">All Tasks</h1>
+                <p class="header-sub" id="header-date"></p>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <span class="search-icon">⌕</span>
+                    <input type="text" id="search-input" placeholder="Search tasks..." autocomplete="off">
+                </div>
+                <button class="add-btn" id="open-modal-btn">
+                    <span>+</span> New Task
+                </button>
+            </div>
+        </header>
+
+        <!-- Todo List -->
+        <section class="todo-section">
+            <div id="todo-list" class="todo-list"></div>
+            <div id="empty-state" class="empty-state hidden">
+                <div class="empty-icon">✦</div>
+                <h3>No tasks found</h3>
+                <p>Add a new task to get started!</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Analytics View -->
+    <main class="analytics-content hidden" id="analytics-view">
+
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <h1>Analytics</h1>
+                <p class="header-sub" id="analytics-date"></p>
+            </div>
+            <div class="header-right">
+                <button class="add-btn" id="refresh-analytics-btn">
+                    <span>↻</span> Refresh
+                </button>
+            </div>
+        </header>
+
+        <!-- Analytics Body -->
+        <section class="analytics-section">
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-completion">
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-value" id="kpi-completion">—</div>
+                    <div class="kpi-label">Completion Rate</div>
+                </div>
+                <div class="kpi-card kpi-total">
+                    <div class="kpi-icon">📋</div>
+                    <div class="kpi-value" id="kpi-total">—</div>
+                    <div class="kpi-label">Total Tasks</div>
+                </div>
+                <div class="kpi-card kpi-overdue">
+                    <div class="kpi-icon">⚠️</div>
+                    <div class="kpi-value" id="kpi-overdue">—</div>
+                    <div class="kpi-label">Overdue</div>
+                </div>
+                <div class="kpi-card kpi-highpri">
+                    <div class="kpi-icon">🔴</div>
+                    <div class="kpi-value" id="kpi-highpri">—</div>
+                    <div class="kpi-label">High Priority Active</div>
+                </div>
+            </div>
+
+            <!-- Daily Line Chart (full width) -->
+            <div class="chart-card chart-full">
+                <div class="chart-header">
+                    <h3>Tasks Created — Last 14 Days</h3>
+                    <span class="chart-badge">Daily Trend</span>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart-daily"></canvas>
+                </div>
+            </div>
+
+            <!-- Priority Donut + Category Bar -->
+            <div class="charts-grid-2">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Priority Breakdown</h3>
+                        <span class="chart-badge">Distribution</span>
+                    </div>
+                    <div class="chart-wrapper chart-donut-wrapper">
+                        <canvas id="chart-priority"></canvas>
+                    </div>
+                    <div class="chart-legend" id="priority-legend"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Top Categories</h3>
+                        <span class="chart-badge">By Count</span>
+                    </div>
+                    <div class="chart-wrapper chart-category-wrapper">
+                        <canvas id="chart-category"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subtask Progress Ring -->
+            <div class="chart-card subtask-stat-card">
+                <div class="chart-header">
+                    <h3>Subtask Progress</h3>
+                    <span class="chart-badge">Overall</span>
+                </div>
+                <div class="subtask-stats-body">
+                    <div class="subtask-big-stat">
+                        <div class="subtask-ring-container">
+                            <svg class="subtask-ring" viewBox="0 0 100 100">
+                                <defs>
+                                    <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#8b5cf6"/>
+                                        <stop offset="100%" style="stop-color:#06b6d4"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle class="ring-bg"   cx="50" cy="50" r="40"/>
+                                <circle class="ring-fill" id="subtask-ring-fill" cx="50" cy="50" r="40"/>
+                            </svg>
+                            <div class="ring-text" id="subtask-ring-text">0%</div>
+                        </div>
+                        <div class="subtask-stat-details">
+                            <div class="subtask-stat-row">
+                                <span class="dot dot-done"></span>
+                                <span><strong id="subtask-done-count">0</strong> subtasks completed</span>
+                            </div>
+                            <div class="subtask-stat-row">
+                                <span class="dot dot-pending"></span>
+                                <span><strong id="subtask-total-count">0</strong> total subtasks</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="task-modal">
+        <div class="modal-header">
+            <h2 id="modal-title">New Task</h2>
+            <button class="modal-close" id="close-modal-btn">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="edit-id">
+
+            <div class="form-group">
+                <label for="task-title">Task Title <span class="required">*</span></label>
+                <input type="text" id="task-title" placeholder="What needs to be done?" maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label for="task-description">Description</label>
+                <textarea id="task-description" placeholder="Add more details..." rows="3"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="task-priority">Priority</label>
+                    <select id="task-priority">
+                        <option value="low">🟢 Low</option>
+                        <option value="medium" selected>🟡 Medium</option>
+                        <option value="high">🔴 High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-category">Category</label>
+                    <input type="text" id="task-category" placeholder="e.g. Work, Personal" value="General">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="task-due">Due Date</label>
+                <input type="date" id="task-due">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="cancel-btn">Cancel</button>
+            <button class="btn-primary" id="save-task-btn">Save Task</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast"></div>
+
+<script src="{{ url_for('static', path='app.js') }}"></script>
+</body>
+</html>
