@@ -14,8 +14,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    os.makedirs("static", exist_ok=True)
-    os.makedirs("templates", exist_ok=True)
+    # On Vercel the filesystem is read-only except /tmp; skip makedirs if they fail
+    try:
+        os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
+        os.makedirs(os.path.join(BASE_DIR, "templates"), exist_ok=True)
+    except OSError:
+        pass
+    # Ensure /tmp exists for the database (always true on Vercel Linux)
+    os.makedirs("/tmp", exist_ok=True)
     init_db()
     yield
 
