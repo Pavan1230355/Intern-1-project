@@ -9,6 +9,9 @@ import sqlite3
 from datetime import datetime, date, timedelta
 import os
 
+# Resolve paths relative to this file so they work in Vercel's Lambda env
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     os.makedirs("static", exist_ok=True)
@@ -18,11 +21,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="TaskFlow", description="Premium Todo List App", lifespan=lifespan)
 
-# Mount static files and templates
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+# Use absolute paths so Vercel's Lambda runtime can locate these directories
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-DATABASE = "todos.db"
+# /tmp is the only writable directory on Vercel; falls back to cwd for local dev
+DATABASE = os.path.join("/tmp", "todos.db") if os.path.exists("/tmp") else os.path.join(BASE_DIR, "todos.db")
 
 
 # ── Database helpers ─────────────────────────────────────────────────────────
