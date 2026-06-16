@@ -29,8 +29,11 @@ app = FastAPI(title="TaskFlow", description="Premium Todo List App", lifespan=li
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-# SQLite database — lives alongside the app in the project directory
-DATABASE = os.path.join(BASE_DIR, "todos.db")
+# SQLite database:
+#   - Vercel Lambda: /var/task/ is READ-ONLY → must use /tmp/
+#   - Render / local: write next to the app in BASE_DIR
+DATABASE = "/tmp/todos.db" if os.path.isdir("/tmp") and not os.access(BASE_DIR, os.W_OK) else os.path.join(BASE_DIR, "todos.db")
+
 
 
 # ── Database helpers ─────────────────────────────────────────────────────────
