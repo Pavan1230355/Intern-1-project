@@ -14,25 +14,25 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # On Vercel the filesystem is read-only except /tmp; skip makedirs if they fail
+    # /tmp is writable on both Vercel and Cloud Run; use it for the database
     try:
-        os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
-        os.makedirs(os.path.join(BASE_DIR, "templates"), exist_ok=True)
+        os.makedirs("/tmp", exist_ok=True)
     except OSError:
         pass
-    # Ensure /tmp exists for the database (always true on Vercel Linux)
-    os.makedirs("/tmp", exist_ok=True)
     init_db()
     yield
 
 app = FastAPI(title="TaskFlow", description="Premium Todo List App", lifespan=lifespan)
 
-# Use absolute paths so Vercel's Lambda runtime can locate these directories
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+# On Vercel, /static/* is served by the CDN (vercel.json routes it directly).
+# Only mount StaticFiles locally so uvicorn can serve them in dev mode.
+if not os.environ.get("VERCEL"):
+    app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-# /tmp is the only writable directory on Vercel; falls back to cwd for local dev
-DATABASE = os.path.join("/tmp", "todos.db") if os.path.exists("/tmp") else os.path.join(BASE_DIR, "todos.db")
+# /tmp is the only writable directory on Vercel; fall back to project root for local dev
+DATABASE = os.path.join("/tmp", "todos.db") if os.environ.get("VERCEL") else os.path.join(BASE_DIR, "todos.db")
 
 
 # ── Database helpers ─────────────────────────────────────────────────────────

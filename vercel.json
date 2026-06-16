@@ -6,8 +6,12 @@
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
-        "includeFiles": ["templates/**", "static/**"]
+        "includeFiles": ["templates/**"]
       }
+    },
+    {
+      "src": "static/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
