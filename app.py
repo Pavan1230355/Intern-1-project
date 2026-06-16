@@ -25,14 +25,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="TaskFlow", description="Premium Todo List App", lifespan=lifespan)
 
 # On Vercel, /static/* is served by the CDN (vercel.json routes it directly).
-# Only mount StaticFiles locally so uvicorn can serve them in dev mode.
+# On Vercel, /static/* is served by CDN (vercel.json routes it directly).
+# On Render/local, uvicorn serves them via StaticFiles.
 if not os.environ.get("VERCEL"):
     app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-# /tmp is the only writable directory on Vercel; fall back to project root for local dev
+# Database path: /tmp on Vercel (ephemeral), BASE_DIR everywhere else (persistent)
 DATABASE = os.path.join("/tmp", "todos.db") if os.environ.get("VERCEL") else os.path.join(BASE_DIR, "todos.db")
+
 
 
 # ── Database helpers ─────────────────────────────────────────────────────────
